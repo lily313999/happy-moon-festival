@@ -59,8 +59,8 @@ function initGame() {
   canvas.addEventListener("click", onClick);
 
   // 觸控事件
-  canvas.addEventListener("touchmove", onTouchMove);
-  canvas.addEventListener("touchstart", onTouchStart);
+  canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+  canvas.addEventListener("touchstart", onTouchStart, { passive: false });
 
   window.addEventListener("resize", resizeCanvas);
 
@@ -85,6 +85,7 @@ function onMouseMove(e) {
 
 function onTouchMove(e) {
   if (gameFinished) return;
+  e.preventDefault(); // 阻止手機頁面拖動
   const touch = e.touches[0];
   cursorImgEl.style.left = touch.clientX + "px";
   cursorImgEl.style.top = touch.clientY + "px";
@@ -96,6 +97,7 @@ function onClick(e) {
 }
 
 function onTouchStart(e) {
+  e.preventDefault(); // 阻止手機點擊後捲動
   const touch = e.changedTouches[0];
   handlePlace(touch.clientX, touch.clientY);
 }

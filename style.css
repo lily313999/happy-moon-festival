@@ -1,6 +1,9 @@
-body {
+body, html {
   margin: 0;
   padding: 0;
+  overflow: hidden;      /* 防止整頁滾動 */
+  height: 100%;
+  touch-action: none;    /* 禁用預設觸控行為 */
   font-family: sans-serif;
   display: flex;
   flex-direction: column;
