@@ -54,8 +54,14 @@ function initGame() {
   cursorImgEl.style.display = "block";
   resizeCanvas();
 
+  // 滑鼠事件
   canvas.addEventListener("mousemove", onMouseMove);
   canvas.addEventListener("click", onClick);
+
+  // 觸控事件
+  canvas.addEventListener("touchmove", onTouchMove);
+  canvas.addEventListener("touchstart", onTouchStart);
+
   window.addEventListener("resize", resizeCanvas);
 
   drawAllPlaced();
@@ -77,30 +83,44 @@ function onMouseMove(e) {
   cursorImgEl.style.top = e.clientY + "px";
 }
 
+function onTouchMove(e) {
+  if (gameFinished) return;
+  const touch = e.touches[0];
+  cursorImgEl.style.left = touch.clientX + "px";
+  cursorImgEl.style.top = touch.clientY + "px";
+}
+
 // -------------------- 放置圖片 --------------------
 function onClick(e) {
+  handlePlace(e.clientX, e.clientY);
+}
+
+function onTouchStart(e) {
+  const touch = e.changedTouches[0];
+  handlePlace(touch.clientX, touch.clientY);
+}
+
+function handlePlace(clientX, clientY) {
   if (gameFinished) return;
   if (currentIndex < pieces.length) {
     const rect = canvas.getBoundingClientRect();
 
-    // 將滑鼠位置轉換成 canvas 真實像素座標
+    // 將螢幕座標轉換成 canvas 真實像素座標
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
 
     const img = new Image();
     img.src = pieces[currentIndex];
     img.onload = () => {
-      // 以圖片中心對齊游標
       placedPositions.push({
         src: pieces[currentIndex],
         x: x - img.width / 2,
         y: y - img.height / 2
       });
 
-      // 暫時隱藏游標
       cursorImgEl.style.display = "none";
 
       currentIndex++;
@@ -110,7 +130,7 @@ function onClick(e) {
       } else {
         gameFinished = true;
         cursorImgEl.style.display = "none";
-        drawAllPlaced(true); // 全部完成後一次畫出
+        drawAllPlaced(true);
         document.getElementById("download-btn").style.display = "inline-block";
         document.getElementById("restart-btn").style.display = "inline-block";
       }
