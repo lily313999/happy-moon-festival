@@ -4,8 +4,49 @@ const startBtn = document.getElementById('start-btn');
 const startScreen = document.getElementById('start-screen');
 const gameScreen = document.getElementById('game-screen');
 
+// -------------------- 裝置判斷 --------------------
+const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+// -------------------- 控制按鈕 --------------------
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+canvas.style.cursor = "none";
+
+const cursorImgEl = document.createElement("img");
+cursorImgEl.style.position = "absolute";
+cursorImgEl.style.pointerEvents = "none";
+cursorImgEl.style.transform = "translate(-50%, -50%)";
+document.body.appendChild(cursorImgEl);
+
+const confirmBtn = document.getElementById("confirm-btn");
+const downloadBtn = document.getElementById("download-btn");
+const restartBtn = document.getElementById("restart-btn");
+
+// 一開始就決定是否顯示下載按鈕
+if (!isMobile) {
+  downloadBtn.style.display = "none"; // 💻 電腦：永遠隱藏
+}
+
+// -------------------- 拼板圖片 --------------------
+const pieces = [
+  "img/piece1.png",
+  "img/piece2.png",
+  "img/piece3.png",
+  "img/piece4.png",
+  "img/piece5.png",
+];
+
+// -------------------- 背景 --------------------
+let bg = new Image();
+bg.src = "img/background.jpg";
+
+let currentIndex = 0;
+let placedPositions = []; // {src, x, y}
+let gameFinished = false;
+let cursorPos = { x: 0, y: 0 }; // 記錄游標位置
 let chosen = false;
 
+// -------------------- 初始畫面 --------------------
 choiceImg.addEventListener('click', () => {
   chosen = true;
   choiceImg.classList.add('active');
@@ -19,56 +60,18 @@ startBtn.addEventListener('click', () => {
   initGame();
 });
 
-// -------------------- 裝置判斷 --------------------
-const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-// -------------------- 遊戲邏輯 --------------------
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-canvas.style.cursor = "none";
-
-// 游標圖片
-const cursorImgEl = document.createElement("img");
-cursorImgEl.style.position = "absolute";
-cursorImgEl.style.pointerEvents = "none";
-cursorImgEl.style.transform = "translate(-50%, -50%)";
-document.body.appendChild(cursorImgEl);
-
-// 控制按鈕
-const confirmBtn = document.getElementById("confirm-btn");
-const downloadBtn = document.getElementById("download-btn");
-const restartBtn = document.getElementById("restart-btn");
-
-// 拼板圖片
-const pieces = [
-  "img/piece1.png",
-  "img/piece2.png",
-  "img/piece3.png",
-  "img/piece4.png",
-  "img/piece5.png",
-];
-
-// 背景
-let bg = new Image();
-bg.src = "img/background.jpg";
-
-let currentIndex = 0;
-let placedPositions = []; // {src, x, y}
-let gameFinished = false;
-let cursorPos = { x: 0, y: 0 }; // 記錄游標位置
-
-// -------------------- 初始化 --------------------
+// -------------------- 初始化遊戲 --------------------
 function initGame() {
   cursorImgEl.src = pieces[currentIndex];
   cursorImgEl.style.display = "block";
   resizeCanvas();
 
   if (isMobile) {
-    // 手機模式：顯示按鈕
+    // 📱 手機模式
     confirmBtn.style.display = "inline-block";
     canvas.addEventListener("touchmove", onTouchMove, { passive: false });
   } else {
-    // 電腦模式：隱藏按鈕
+    // 💻 電腦模式
     confirmBtn.style.display = "none";
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("click", onClick);
@@ -121,7 +124,6 @@ function handlePlace(clientX, clientY) {
   if (gameFinished) return;
   if (currentIndex < pieces.length) {
     const rect = canvas.getBoundingClientRect();
-
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
@@ -146,7 +148,7 @@ function handlePlace(clientX, clientY) {
         cursorImgEl.style.display = "none";
         confirmBtn.style.display = "none";
         drawAllPlaced(true);
-        downloadBtn.style.display = "inline-block";
+        if (isMobile) downloadBtn.style.display = "inline-block"; // 📱 手機才顯示
         restartBtn.style.display = "inline-block";
       }
     };
@@ -183,7 +185,7 @@ restartBtn.addEventListener("click", () => {
     confirmBtn.style.display = "none";
   }
 
-  downloadBtn.style.display = "none";
+  downloadBtn.style.display = "none"; // 重置時下載按鈕隱藏
   restartBtn.style.display = "none";
   drawAllPlaced();
 });
@@ -191,16 +193,6 @@ restartBtn.addEventListener("click", () => {
 // -------------------- 下載 --------------------
 downloadBtn.addEventListener("click", () => {
   const dataUrl = canvas.toDataURL("image/png");
-
-  if (isMobile) {
-    // 手機：直接開啟圖片，並提示使用者長按存到相簿
-    alert("📌 提示：長按圖片即可存到相簿");
-    window.open(dataUrl, "_blank");
-  } else {
-    // 電腦：用 a[download] 下載
-    const link = document.createElement("a");
-    link.download = "card.png";
-    link.href = dataUrl;
-    link.click();
-  }
+  alert("📌 提示：長按圖片即可存到相簿");
+  window.open(dataUrl, "_blank");
 });
