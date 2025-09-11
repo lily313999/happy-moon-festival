@@ -20,7 +20,7 @@ startBtn.addEventListener('click', () => {
 });
 
 // -------------------- 裝置判斷 --------------------
-const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 // -------------------- 遊戲邏輯 --------------------
 const canvas = document.getElementById("canvas");
@@ -64,11 +64,11 @@ function initGame() {
   resizeCanvas();
 
   if (isMobile) {
-    // 手機模式
+    // 手機模式：顯示按鈕
     confirmBtn.style.display = "inline-block";
     canvas.addEventListener("touchmove", onTouchMove, { passive: false });
   } else {
-    // 電腦模式
+    // 電腦模式：隱藏按鈕
     confirmBtn.style.display = "none";
     canvas.addEventListener("mousemove", onMouseMove);
     canvas.addEventListener("click", onClick);

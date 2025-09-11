@@ -54,3 +54,13 @@ canvas {
   padding: 10px 20px;
   font-size: 18px;
 }
+
+
+#confirm-btn {
+  background-color: #4CAF50; /* 綠色 */
+  color: white;
+  font-size: 20px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+}
