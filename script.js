@@ -19,19 +19,27 @@ startBtn.addEventListener('click', () => {
   initGame();
 });
 
+// -------------------- 裝置判斷 --------------------
+const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
 // -------------------- 遊戲邏輯 --------------------
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 canvas.style.cursor = "none";
 
-// 游標圖片元素
+// 游標圖片
 const cursorImgEl = document.createElement("img");
 cursorImgEl.style.position = "absolute";
 cursorImgEl.style.pointerEvents = "none";
 cursorImgEl.style.transform = "translate(-50%, -50%)";
 document.body.appendChild(cursorImgEl);
 
-// 5 張拼板圖片
+// 控制按鈕
+const confirmBtn = document.getElementById("confirm-btn");
+const downloadBtn = document.getElementById("download-btn");
+const restartBtn = document.getElementById("restart-btn");
+
+// 拼板圖片
 const pieces = [
   "img/piece1.png",
   "img/piece2.png",
@@ -47,6 +55,7 @@ bg.src = "img/background.jpg";
 let currentIndex = 0;
 let placedPositions = []; // {src, x, y}
 let gameFinished = false;
+let cursorPos = { x: 0, y: 0 }; // 記錄游標位置
 
 // -------------------- 初始化 --------------------
 function initGame() {
@@ -54,16 +63,18 @@ function initGame() {
   cursorImgEl.style.display = "block";
   resizeCanvas();
 
-  // 滑鼠事件
-  canvas.addEventListener("mousemove", onMouseMove);
-  canvas.addEventListener("click", onClick);
-
-  // 觸控事件
-  canvas.addEventListener("touchmove", onTouchMove, { passive: false });
-  canvas.addEventListener("touchstart", onTouchStart, { passive: false });
+  if (isMobile) {
+    // 手機模式
+    confirmBtn.style.display = "inline-block";
+    canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+  } else {
+    // 電腦模式
+    confirmBtn.style.display = "none";
+    canvas.addEventListener("mousemove", onMouseMove);
+    canvas.addEventListener("click", onClick);
+  }
 
   window.addEventListener("resize", resizeCanvas);
-
   drawAllPlaced();
 }
 
@@ -79,35 +90,38 @@ function resizeCanvas() {
 // -------------------- 游標跟隨 --------------------
 function onMouseMove(e) {
   if (gameFinished) return;
-  cursorImgEl.style.left = e.clientX + "px";
-  cursorImgEl.style.top = e.clientY + "px";
+  cursorPos.x = e.clientX;
+  cursorPos.y = e.clientY;
+  cursorImgEl.style.left = cursorPos.x + "px";
+  cursorImgEl.style.top = cursorPos.y + "px";
 }
 
 function onTouchMove(e) {
   if (gameFinished) return;
-  e.preventDefault(); // 阻止手機頁面拖動
+  e.preventDefault();
   const touch = e.touches[0];
-  cursorImgEl.style.left = touch.clientX + "px";
-  cursorImgEl.style.top = touch.clientY + "px";
+  cursorPos.x = touch.clientX;
+  cursorPos.y = touch.clientY;
+  cursorImgEl.style.left = cursorPos.x + "px";
+  cursorImgEl.style.top = cursorPos.y + "px";
 }
 
-// -------------------- 放置圖片 --------------------
+// -------------------- 電腦模式：點擊放置 --------------------
 function onClick(e) {
   handlePlace(e.clientX, e.clientY);
 }
 
-function onTouchStart(e) {
-  e.preventDefault(); // 阻止手機點擊後捲動
-  const touch = e.changedTouches[0];
-  handlePlace(touch.clientX, touch.clientY);
-}
+// -------------------- 手機模式：按下按鈕放置 --------------------
+confirmBtn.addEventListener("click", () => {
+  handlePlace(cursorPos.x, cursorPos.y);
+});
 
+// -------------------- 放置邏輯 --------------------
 function handlePlace(clientX, clientY) {
   if (gameFinished) return;
   if (currentIndex < pieces.length) {
     const rect = canvas.getBoundingClientRect();
 
-    // 將螢幕座標轉換成 canvas 真實像素座標
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
@@ -123,8 +137,6 @@ function handlePlace(clientX, clientY) {
         y: y - img.height / 2
       });
 
-      cursorImgEl.style.display = "none";
-
       currentIndex++;
       if (currentIndex < pieces.length) {
         cursorImgEl.src = pieces[currentIndex];
@@ -132,15 +144,16 @@ function handlePlace(clientX, clientY) {
       } else {
         gameFinished = true;
         cursorImgEl.style.display = "none";
+        confirmBtn.style.display = "none";
         drawAllPlaced(true);
-        document.getElementById("download-btn").style.display = "inline-block";
-        document.getElementById("restart-btn").style.display = "inline-block";
+        downloadBtn.style.display = "inline-block";
+        restartBtn.style.display = "inline-block";
       }
     };
   }
 }
 
-// -------------------- 繪製圖片 --------------------
+// -------------------- 繪製 --------------------
 function drawAllPlaced(finished = false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
@@ -157,19 +170,26 @@ function drawAllPlaced(finished = false) {
 }
 
 // -------------------- 再玩一次 --------------------
-document.getElementById("restart-btn").addEventListener("click", () => {
+restartBtn.addEventListener("click", () => {
   placedPositions = [];
   currentIndex = 0;
   gameFinished = false;
   cursorImgEl.src = pieces[currentIndex];
   cursorImgEl.style.display = "block";
-  document.getElementById("download-btn").style.display = "none";
-  document.getElementById("restart-btn").style.display = "none";
+
+  if (isMobile) {
+    confirmBtn.style.display = "inline-block";
+  } else {
+    confirmBtn.style.display = "none";
+  }
+
+  downloadBtn.style.display = "none";
+  restartBtn.style.display = "none";
   drawAllPlaced();
 });
 
 // -------------------- 下載 --------------------
-document.getElementById("download-btn").addEventListener("click", () => {
+downloadBtn.addEventListener("click", () => {
   const link = document.createElement("a");
   link.download = "card.png";
   link.href = canvas.toDataURL("image/png");

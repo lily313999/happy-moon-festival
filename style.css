@@ -43,8 +43,14 @@ canvas {
   margin: 10px auto;
 }
 
+#controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
 #controls button {
   margin: 5px;
-  padding: 8px 16px;
-  font-size: 16px;
+  padding: 10px 20px;
+  font-size: 18px;
 }
