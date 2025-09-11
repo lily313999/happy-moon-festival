@@ -37,8 +37,13 @@ const pieces = [
 ];
 
 // -------------------- 背景 --------------------
+const backgrounds = [
+  "img/background1.jpg",
+  "img/background2.jpg",
+  "img/background3.jpg"
+];
+
 let bg = new Image();
-bg.src = "img/background.jpg";
 
 let currentIndex = 0;
 let placedPositions = []; // {src, x, y}
@@ -62,23 +67,31 @@ startBtn.addEventListener('click', () => {
 
 // -------------------- 初始化遊戲 --------------------
 function initGame() {
-  cursorImgEl.src = pieces[currentIndex];
-  cursorImgEl.style.display = "block";
-  resizeCanvas();
+  // 🎲 遊戲開始隨機背景
+  const randomIndex = Math.floor(Math.random() * backgrounds.length);
+  bg = new Image();
+  bg.src = backgrounds[randomIndex];
 
-  if (isMobile) {
-    // 📱 手機模式
-    confirmBtn.style.display = "inline-block";
-    canvas.addEventListener("touchmove", onTouchMove, { passive: false });
-  } else {
-    // 💻 電腦模式
-    confirmBtn.style.display = "none";
-    canvas.addEventListener("mousemove", onMouseMove);
-    canvas.addEventListener("click", onClick);
-  }
+  bg.onload = () => {
+    cursorImgEl.src = pieces[currentIndex];
+    cursorImgEl.style.display = "block";
 
-  window.addEventListener("resize", resizeCanvas);
-  drawAllPlaced();
+    resizeCanvas();
+    drawAllPlaced(); // 確保一開始就能畫背景
+
+    if (isMobile) {
+      // 📱 手機模式
+      confirmBtn.style.display = "inline-block";
+      canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+    } else {
+      // 💻 電腦模式
+      confirmBtn.style.display = "none";
+      canvas.addEventListener("mousemove", onMouseMove);
+      canvas.addEventListener("click", onClick);
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+  };
 }
 
 // -------------------- 調整 canvas --------------------
@@ -136,7 +149,9 @@ function handlePlace(clientX, clientY) {
       placedPositions.push({
         src: pieces[currentIndex],
         x: x - img.width / 2,
-        y: y - img.height / 2
+        y: y - img.height / 2,
+        w: img.width,
+        h: img.height
       });
 
       currentIndex++;
@@ -160,15 +175,13 @@ function drawAllPlaced(finished = false) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
-  if (finished) {
-    placedPositions.forEach(p => {
-      const img = new Image();
-      img.src = p.src;
-      img.onload = () => {
-        ctx.drawImage(img, p.x, p.y);
-      };
-    });
-  }
+  placedPositions.forEach(p => {
+    const img = new Image();
+    img.src = p.src;
+    img.onload = () => {
+      ctx.drawImage(img, p.x, p.y, p.w, p.h);
+    };
+  });
 }
 
 // -------------------- 再玩一次 --------------------
@@ -187,7 +200,7 @@ restartBtn.addEventListener("click", () => {
 
   downloadBtn.style.display = "none"; // 重置時下載按鈕隱藏
   restartBtn.style.display = "none";
-  drawAllPlaced();
+  initGame(); // 重新開始會再次隨機背景
 });
 
 // -------------------- 下載 --------------------
