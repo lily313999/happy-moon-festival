@@ -140,16 +140,25 @@ function handlePlace(clientX, clientY) {
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
+    let x = (clientX - rect.left) * scaleX;
+    let y = (clientY - rect.top) * scaleY;
 
     const img = new Image();
     img.src = pieces[currentIndex];
     img.onload = () => {
+      const halfW = img.width / 2;
+      const halfH = img.height / 2;
+
+      // 📌 邊界檢查（限制只能在背景內）
+      if (x < halfW) x = halfW;
+      if (x > canvas.width - halfW) x = canvas.width - halfW;
+      if (y < halfH) y = halfH;
+      if (y > canvas.height - halfH) y = canvas.height - halfH;
+
       placedPositions.push({
         src: pieces[currentIndex],
-        x: x - img.width / 2,
-        y: y - img.height / 2,
+        x: x - halfW,
+        y: y - halfH,
         w: img.width,
         h: img.height
       });
