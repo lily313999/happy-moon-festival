@@ -190,8 +190,17 @@ restartBtn.addEventListener("click", () => {
 
 // -------------------- 下載 --------------------
 downloadBtn.addEventListener("click", () => {
-  const link = document.createElement("a");
-  link.download = "card.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+  const dataUrl = canvas.toDataURL("image/png");
+
+  if (isMobile) {
+    // 手機：直接開啟圖片，並提示使用者長按存到相簿
+    alert("📌 提示：長按圖片即可存到相簿");
+    window.open(dataUrl, "_blank");
+  } else {
+    // 電腦：用 a[download] 下載
+    const link = document.createElement("a");
+    link.download = "card.png";
+    link.href = dataUrl;
+    link.click();
+  }
 });
