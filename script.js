@@ -188,9 +188,17 @@ function handlePlace(clientX, clientY) {
         gameFinished = true;
         cursorImgEl.style.display = "none";
         confirmBtn.style.display = "none";
-        drawAllPlaced(true);
 
-        // 🎯 拼圖完成 → 轉成 Blob URL，讓手機能長按存圖
+        // ✅ 重新繪製背景 + 所有拼圖，避免只輸出背景
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+        placedPositions.forEach(p => {
+          const pieceImg = new Image();
+          pieceImg.src = p.src;
+          ctx.drawImage(pieceImg, p.x, p.y, p.w, p.h);
+        });
+
+        // 🎯 把完整畫面轉成 Blob URL
         canvas.toBlob((blob) => {
           const url = URL.createObjectURL(blob);
           resultImg = document.createElement("img");
