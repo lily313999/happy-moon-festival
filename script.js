@@ -1,5 +1,4 @@
 // -------------------- 初始畫面 --------------------
-const choiceImg = document.getElementById('selectedImage');
 const startBtn = document.getElementById('start-btn');
 const startScreen = document.getElementById('start-screen');
 const gameScreen = document.getElementById('game-screen');
@@ -19,22 +18,23 @@ cursorImgEl.style.transform = "translate(-50%, -50%)";
 document.body.appendChild(cursorImgEl);
 
 const confirmBtn = document.getElementById("confirm-btn");
-const downloadBtn = document.getElementById("download-btn");
+const downloadBtn = document.getElementById("download-btn"); // 仍然抓，但會隱藏
 const restartBtn = document.getElementById("restart-btn");
+const backBtn = document.getElementById("back-btn");
 
-// 一開始就決定是否顯示下載按鈕
-if (!isMobile) {
-  downloadBtn.style.display = "none"; // 💻 電腦：永遠隱藏
-}
+// 🚫 一律隱藏下載按鈕（電腦 + 手機）
+downloadBtn.style.display = "none";
 
-// -------------------- 拼板圖片 --------------------
-const pieces = [
-  "img/piece1.png",
-  "img/piece2.png",
-  "img/piece3.png",
-  "img/piece4.png",
-  "img/piece5.png",
-];
+// -------------------- 拼圖數量設定 --------------------
+const pieceCounts = {
+  1: 5,
+  2: 7,
+  3: 6,
+  4: 9
+};
+
+let pieces = [];
+let selectedChoice = null;
 
 // -------------------- 背景 --------------------
 const backgrounds = [
@@ -42,24 +42,32 @@ const backgrounds = [
   "img/background2.jpg",
   "img/background3.jpg"
 ];
-
 let bg = new Image();
 
 let currentIndex = 0;
-let placedPositions = []; // {src, x, y}
+let placedPositions = [];
 let gameFinished = false;
-let cursorPos = { x: 0, y: 0 }; // 記錄游標位置
-let chosen = false;
+let cursorPos = { x: 0, y: 0 };
 
-// -------------------- 初始畫面 --------------------
-choiceImg.addEventListener('click', () => {
-  chosen = true;
-  choiceImg.classList.add('active');
-  startBtn.disabled = false;
+// -------------------- 初始畫面選擇 --------------------
+document.querySelectorAll('.image-selection img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.querySelectorAll('.image-selection img').forEach(i => i.classList.remove('active'));
+    img.classList.add('active');
+    selectedChoice = img.dataset.choice;
+    startBtn.disabled = false;
+  });
 });
 
 startBtn.addEventListener('click', () => {
-  if (!chosen) return;
+  if (!selectedChoice) return;
+
+  const count = pieceCounts[selectedChoice];
+  pieces = [];
+  for (let i = 1; i <= count; i++) {
+    pieces.push(`img/piece${selectedChoice}-${i}.png`);
+  }
+
   startScreen.style.display = 'none';
   gameScreen.style.display = 'block';
   initGame();
@@ -67,7 +75,6 @@ startBtn.addEventListener('click', () => {
 
 // -------------------- 初始化遊戲 --------------------
 function initGame() {
-  // 🎲 遊戲開始隨機背景
   const randomIndex = Math.floor(Math.random() * backgrounds.length);
   bg = new Image();
   bg.src = backgrounds[randomIndex];
@@ -77,18 +84,19 @@ function initGame() {
     cursorImgEl.style.display = "block";
 
     resizeCanvas();
-    drawAllPlaced(); // 確保一開始就能畫背景
+    drawAllPlaced();
 
     if (isMobile) {
-      // 📱 手機模式
       confirmBtn.style.display = "inline-block";
       canvas.addEventListener("touchmove", onTouchMove, { passive: false });
     } else {
-      // 💻 電腦模式
       confirmBtn.style.display = "none";
       canvas.addEventListener("mousemove", onMouseMove);
       canvas.addEventListener("click", onClick);
     }
+
+    restartBtn.style.display = "inline-block";
+    backBtn.style.display = "inline-block";
 
     window.addEventListener("resize", resizeCanvas);
   };
@@ -149,7 +157,6 @@ function handlePlace(clientX, clientY) {
       const halfW = img.width / 2;
       const halfH = img.height / 2;
 
-      // 📌 邊界檢查（限制只能在背景內）
       if (x < halfW) x = halfW;
       if (x > canvas.width - halfW) x = canvas.width - halfW;
       if (y < halfH) y = halfH;
@@ -172,8 +179,7 @@ function handlePlace(clientX, clientY) {
         cursorImgEl.style.display = "none";
         confirmBtn.style.display = "none";
         drawAllPlaced(true);
-        if (isMobile) downloadBtn.style.display = "inline-block"; // 📱 手機才顯示
-        restartBtn.style.display = "inline-block";
+        // 📌 不再顯示下載按鈕，手機用戶可直接長按圖片另存
       }
     };
   }
@@ -207,14 +213,25 @@ restartBtn.addEventListener("click", () => {
     confirmBtn.style.display = "none";
   }
 
-  downloadBtn.style.display = "none"; // 重置時下載按鈕隱藏
-  restartBtn.style.display = "none";
-  initGame(); // 重新開始會再次隨機背景
+  initGame();
 });
 
-// -------------------- 下載 --------------------
-downloadBtn.addEventListener("click", () => {
-  const dataUrl = canvas.toDataURL("image/png");
-  alert("📌 提示：長按圖片即可存到相簿");
-  window.open(dataUrl, "_blank");
+// -------------------- 回到選圖畫面 --------------------
+backBtn.addEventListener("click", () => {
+  placedPositions = [];
+  currentIndex = 0;
+  gameFinished = false;
+  pieces = [];
+  selectedChoice = null;
+
+  gameScreen.style.display = "none";
+  startScreen.style.display = "block";
+
+  document.querySelectorAll('.image-selection img').forEach(i => i.classList.remove('active'));
+  startBtn.disabled = true;
+
+  confirmBtn.style.display = "none";
+  restartBtn.style.display = "none";
+  backBtn.style.display = "none";
+  cursorImgEl.style.display = "none";
 });
