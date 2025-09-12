@@ -18,11 +18,11 @@ cursorImgEl.style.transform = "translate(-50%, -50%)";
 document.body.appendChild(cursorImgEl);
 
 const confirmBtn = document.getElementById("confirm-btn");
-const downloadBtn = document.getElementById("download-btn"); // 仍保留，但不顯示
+const downloadBtn = document.getElementById("download-btn"); // 不再使用
 const restartBtn = document.getElementById("restart-btn");
 const backBtn = document.getElementById("back-btn");
 
-// 📌 生成完成圖像的 <img>
+// 📌 拼圖完成後產生的圖片 <img>
 let resultImg = null;
 
 // 🚫 一律隱藏下載按鈕
@@ -190,22 +190,26 @@ function handlePlace(clientX, clientY) {
         confirmBtn.style.display = "none";
         drawAllPlaced(true);
 
-        // 🎯 拼圖完成 → 轉成圖片，替代 canvas
-        const dataUrl = canvas.toDataURL("image/png");
-        resultImg = document.createElement("img");
-        resultImg.src = dataUrl;
-        resultImg.style.width = "100%";
-        resultImg.style.maxWidth = "600px";
-        resultImg.style.border = "1px solid #ccc";
-        resultImg.style.display = "block";
-        resultImg.style.margin = "10px auto";
+        // 🎯 拼圖完成 → 轉成 Blob URL，讓手機能長按存圖
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          resultImg = document.createElement("img");
+          resultImg.src = url;
+          resultImg.style.width = "100%";
+          resultImg.style.maxWidth = "600px";
+          resultImg.style.border = "1px solid #ccc";
+          resultImg.style.display = "block";
+          resultImg.style.margin = "10px auto";
 
-        canvas.style.display = "none";
-        canvas.parentNode.insertBefore(resultImg, canvas.nextSibling);
+          canvas.style.display = "none";
+          canvas.parentNode.insertBefore(resultImg, canvas.nextSibling);
 
-        if (isMobile) {
-          alert("📌 提示：長按圖片即可存到相簿");
-        }
+          if (isMobile) {
+            alert("📌 提示：長按圖片即可存到相簿");
+          } else {
+            alert("📌 提示：右鍵圖片即可另存");
+          }
+        }, "image/png");
       }
     };
   }
