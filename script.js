@@ -18,14 +18,14 @@ cursorImgEl.style.transform = "translate(-50%, -50%)";
 document.body.appendChild(cursorImgEl);
 
 const confirmBtn = document.getElementById("confirm-btn");
-const downloadBtn = document.getElementById("download-btn"); // 不再使用
+const downloadBtn = document.getElementById("download-btn"); // 手機不用
 const restartBtn = document.getElementById("restart-btn");
 const backBtn = document.getElementById("back-btn");
 
 // 📌 拼圖完成後產生的圖片 <img>
 let resultImg = null;
 
-// 🚫 一律隱藏下載按鈕
+// 🚫 一律隱藏下載按鈕（手機改用長按）
 downloadBtn.style.display = "none";
 
 // -------------------- 拼圖數量設定 --------------------
@@ -172,7 +172,9 @@ function handlePlace(clientX, clientY) {
       if (y < halfH) y = halfH;
       if (y > canvas.height - halfH) y = canvas.height - halfH;
 
+      // ✅ 存下已載入的 img 物件
       placedPositions.push({
+        img: img,
         src: pieces[currentIndex],
         x: x - halfW,
         y: y - halfH,
@@ -189,16 +191,14 @@ function handlePlace(clientX, clientY) {
         cursorImgEl.style.display = "none";
         confirmBtn.style.display = "none";
 
-        // ✅ 重新繪製背景 + 所有拼圖，避免只輸出背景
+        // ✅ 完成 → 重繪背景 + 已放置的拼圖
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
         placedPositions.forEach(p => {
-          const pieceImg = new Image();
-          pieceImg.src = p.src;
-          ctx.drawImage(pieceImg, p.x, p.y, p.w, p.h);
+          ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
         });
 
-        // 🎯 把完整畫面轉成 Blob URL
+        // 🎯 轉成 Blob URL
         canvas.toBlob((blob) => {
           const url = URL.createObjectURL(blob);
           resultImg = document.createElement("img");
@@ -212,11 +212,14 @@ function handlePlace(clientX, clientY) {
           canvas.style.display = "none";
           canvas.parentNode.insertBefore(resultImg, canvas.nextSibling);
 
-          if (isMobile) {
-            alert("📌 提示：長按圖片即可存到相簿");
-          } else {
-            alert("📌 提示：右鍵圖片即可另存");
-          }
+          // 延遲後提示，避免 alert 阻塞繪製
+          setTimeout(() => {
+            if (isMobile) {
+              alert("📌 提示：長按圖片即可存到相簿");
+            } else {
+              alert("📌 提示：右鍵圖片即可另存");
+            }
+          }, 200);
         }, "image/png");
       }
     };
@@ -224,16 +227,12 @@ function handlePlace(clientX, clientY) {
 }
 
 // -------------------- 繪製 --------------------
-function drawAllPlaced(finished = false) {
+function drawAllPlaced() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
   placedPositions.forEach(p => {
-    const img = new Image();
-    img.src = p.src;
-    img.onload = () => {
-      ctx.drawImage(img, p.x, p.y, p.w, p.h);
-    };
+    ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
   });
 }
 
