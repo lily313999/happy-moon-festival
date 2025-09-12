@@ -18,11 +18,14 @@ cursorImgEl.style.transform = "translate(-50%, -50%)";
 document.body.appendChild(cursorImgEl);
 
 const confirmBtn = document.getElementById("confirm-btn");
-const downloadBtn = document.getElementById("download-btn"); // 仍然抓，但會隱藏
+const downloadBtn = document.getElementById("download-btn"); // 仍保留，但不顯示
 const restartBtn = document.getElementById("restart-btn");
 const backBtn = document.getElementById("back-btn");
 
-// 🚫 一律隱藏下載按鈕（電腦 + 手機）
+// 📌 生成完成圖像的 <img>
+let resultImg = null;
+
+// 🚫 一律隱藏下載按鈕
 downloadBtn.style.display = "none";
 
 // -------------------- 拼圖數量設定 --------------------
@@ -97,6 +100,13 @@ function initGame() {
 
     restartBtn.style.display = "inline-block";
     backBtn.style.display = "inline-block";
+
+    // 確保 canvas 可見
+    canvas.style.display = "block";
+    if (resultImg) {
+      resultImg.remove();
+      resultImg = null;
+    }
 
     window.addEventListener("resize", resizeCanvas);
   };
@@ -179,7 +189,23 @@ function handlePlace(clientX, clientY) {
         cursorImgEl.style.display = "none";
         confirmBtn.style.display = "none";
         drawAllPlaced(true);
-        // 📌 不再顯示下載按鈕，手機用戶可直接長按圖片另存
+
+        // 🎯 拼圖完成 → 轉成圖片，替代 canvas
+        const dataUrl = canvas.toDataURL("image/png");
+        resultImg = document.createElement("img");
+        resultImg.src = dataUrl;
+        resultImg.style.width = "100%";
+        resultImg.style.maxWidth = "600px";
+        resultImg.style.border = "1px solid #ccc";
+        resultImg.style.display = "block";
+        resultImg.style.margin = "10px auto";
+
+        canvas.style.display = "none";
+        canvas.parentNode.insertBefore(resultImg, canvas.nextSibling);
+
+        if (isMobile) {
+          alert("📌 提示：長按圖片即可存到相簿");
+        }
       }
     };
   }
@@ -234,4 +260,9 @@ backBtn.addEventListener("click", () => {
   restartBtn.style.display = "none";
   backBtn.style.display = "none";
   cursorImgEl.style.display = "none";
+
+  if (resultImg) {
+    resultImg.remove();
+    resultImg = null;
+  }
 });
