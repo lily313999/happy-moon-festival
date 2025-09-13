@@ -32,9 +32,9 @@ downloadBtn.style.display = "none";
 // -------------------- 拼圖數量設定 --------------------
 const pieceCounts = {
   1: 5,
-  2: 6,
-  3: 4,
-  4: 8
+  2: 7,
+  3: 6,
+  4: 9
 };
 
 let pieces = [];
