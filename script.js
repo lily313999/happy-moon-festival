@@ -32,9 +32,9 @@ downloadBtn.style.display = "none";
 // -------------------- 拼圖數量設定 --------------------
 const pieceCounts = {
   1: 5,
-  2: 7,
-  3: 6,
-  4: 9
+  2: 6,
+  3: 4,
+  4: 8
 };
 
 let pieces = [];
@@ -85,17 +85,19 @@ function initGame() {
   bg.src = backgrounds[randomIndex];
 
   bg.onload = () => {
-    // 🚩 第一個拼圖顯示在正中央
-    cursorImgEl.src = pieces[currentIndex];
-    cursorImgEl.style.display = "block";
-    const rect = canvas.getBoundingClientRect();
-    cursorPos.x = rect.left + rect.width / 2;
-    cursorPos.y = rect.top + rect.height / 2;
-    cursorImgEl.style.left = cursorPos.x + "px";
-    cursorImgEl.style.top = cursorPos.y + "px";
-
-    resizeCanvas();
+    resizeCanvas(); // 🎯 先確保 canvas 尺寸正確
     drawAllPlaced();
+
+    // 🚩 延遲一個動畫影格，確保 canvas 尺寸更新後再放正中央
+    requestAnimationFrame(() => {
+      cursorImgEl.src = pieces[currentIndex];
+      cursorImgEl.style.display = "block";
+      const rect = canvas.getBoundingClientRect();
+      cursorPos.x = rect.left + rect.width / 2;
+      cursorPos.y = rect.top + rect.height / 2;
+      cursorImgEl.style.left = cursorPos.x + "px";
+      cursorImgEl.style.top = cursorPos.y + "px";
+    });
 
     if (isMobile) {
       confirmBtn.style.display = "inline-block";
