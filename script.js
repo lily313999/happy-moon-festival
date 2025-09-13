@@ -2,6 +2,7 @@
 const startBtn = document.getElementById('start-btn');
 const startScreen = document.getElementById('start-screen');
 const gameScreen = document.getElementById('game-screen');
+const saveHint = document.getElementById('save-hint'); // 📌 新增提示區塊
 
 // -------------------- 裝置判斷 --------------------
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -73,6 +74,7 @@ startBtn.addEventListener('click', () => {
 
   startScreen.style.display = 'none';
   gameScreen.style.display = 'block';
+  saveHint.style.display = "none"; // 每次進遊戲先隱藏提示
   initGame();
 });
 
@@ -83,8 +85,14 @@ function initGame() {
   bg.src = backgrounds[randomIndex];
 
   bg.onload = () => {
+    // 🚩 第一個拼圖顯示在正中央
     cursorImgEl.src = pieces[currentIndex];
     cursorImgEl.style.display = "block";
+    const rect = canvas.getBoundingClientRect();
+    cursorPos.x = rect.left + rect.width / 2;
+    cursorPos.y = rect.top + rect.height / 2;
+    cursorImgEl.style.left = cursorPos.x + "px";
+    cursorImgEl.style.top = cursorPos.y + "px";
 
     resizeCanvas();
     drawAllPlaced();
@@ -172,7 +180,6 @@ function handlePlace(clientX, clientY) {
       if (y < halfH) y = halfH;
       if (y > canvas.height - halfH) y = canvas.height - halfH;
 
-      // ✅ 存下已載入的 img 物件
       placedPositions.push({
         img: img,
         src: pieces[currentIndex],
@@ -184,8 +191,14 @@ function handlePlace(clientX, clientY) {
 
       currentIndex++;
       if (currentIndex < pieces.length) {
+        // 🚩 下一個拼圖出現時也先放正中央
         cursorImgEl.src = pieces[currentIndex];
         cursorImgEl.style.display = "block";
+        const rect2 = canvas.getBoundingClientRect();
+        cursorPos.x = rect2.left + rect2.width / 2;
+        cursorPos.y = rect2.top + rect2.height / 2;
+        cursorImgEl.style.left = cursorPos.x + "px";
+        cursorImgEl.style.top = cursorPos.y + "px";
       } else {
         gameFinished = true;
         cursorImgEl.style.display = "none";
@@ -212,10 +225,10 @@ function handlePlace(clientX, clientY) {
           canvas.style.display = "none";
           canvas.parentNode.insertBefore(resultImg, canvas.nextSibling);
 
-          // 延遲後提示，避免 alert 阻塞繪製
+          // 📌 提示方式改為：手機顯示文字，電腦用 alert
           setTimeout(() => {
             if (isMobile) {
-              alert("📌 提示：長按圖片即可存到相簿");
+              saveHint.style.display = "block";
             } else {
               alert("📌 提示：右鍵圖片即可另存");
             }
@@ -244,12 +257,20 @@ restartBtn.addEventListener("click", () => {
   cursorImgEl.src = pieces[currentIndex];
   cursorImgEl.style.display = "block";
 
+  // 🚩 第一個拼圖重置到正中央
+  const rect = canvas.getBoundingClientRect();
+  cursorPos.x = rect.left + rect.width / 2;
+  cursorPos.y = rect.top + rect.height / 2;
+  cursorImgEl.style.left = cursorPos.x + "px";
+  cursorImgEl.style.top = cursorPos.y + "px";
+
   if (isMobile) {
     confirmBtn.style.display = "inline-block";
   } else {
     confirmBtn.style.display = "none";
   }
 
+  saveHint.style.display = "none"; // 重置時隱藏提示
   initGame();
 });
 
@@ -271,6 +292,7 @@ backBtn.addEventListener("click", () => {
   restartBtn.style.display = "none";
   backBtn.style.display = "none";
   cursorImgEl.style.display = "none";
+  saveHint.style.display = "none"; // 返回選圖時隱藏提示
 
   if (resultImg) {
     resultImg.remove();
