@@ -2,7 +2,7 @@
 const startBtn = document.getElementById('start-btn');
 const startScreen = document.getElementById('start-screen');
 const gameScreen = document.getElementById('game-screen');
-const saveHint = document.getElementById('save-hint'); // 📌 新增提示區塊
+const saveHint = document.getElementById('save-hint'); // 📌 提示區塊
 
 // -------------------- 裝置判斷 --------------------
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -177,10 +177,13 @@ function handlePlace(clientX, clientY) {
       const halfW = img.width / 2;
       const halfH = img.height / 2;
 
-      if (x < halfW) x = halfW;
-      if (x > canvas.width - halfW) x = canvas.width - halfW;
-      if (y < halfH) y = halfH;
-      if (y > canvas.height - halfH) y = canvas.height - halfH;
+      // ✅ 只有電腦版才做邊界校正
+      if (!isMobile) {
+        if (x < halfW) x = halfW;
+        if (x > canvas.width - halfW) x = canvas.width - halfW;
+        if (y < halfH) y = halfH;
+        if (y > canvas.height - halfH) y = canvas.height - halfH;
+      }
 
       placedPositions.push({
         img: img,
@@ -210,7 +213,7 @@ function handlePlace(clientX, clientY) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
         placedPositions.forEach(p => {
-          ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
+          ctx.drawImage(p.img, p.x, p.y, p.w, p.h); // 🎯 自動裁切超出部分
         });
 
         // 🎯 轉成 Blob URL
