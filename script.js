@@ -2,7 +2,9 @@
 const startBtn = document.getElementById('start-btn');
 const startScreen = document.getElementById('start-screen');
 const gameScreen = document.getElementById('game-screen');
-const saveHint = document.getElementById('save-hint'); // 📌 提示區塊
+const saveHint = document.getElementById('save-hint'); 
+const pieceCounterEl = document.getElementById("piece-counter");
+const remainingCountEl = document.getElementById("remaining-count");
 
 // -------------------- 裝置判斷 --------------------
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -19,14 +21,11 @@ cursorImgEl.style.transform = "translate(-50%, -50%)";
 document.body.appendChild(cursorImgEl);
 
 const confirmBtn = document.getElementById("confirm-btn");
-const downloadBtn = document.getElementById("download-btn"); // 手機不用
+const downloadBtn = document.getElementById("download-btn");
 const restartBtn = document.getElementById("restart-btn");
 const backBtn = document.getElementById("back-btn");
 
-// 📌 拼圖完成後產生的圖片 <img>
 let resultImg = null;
-
-// 🚫 一律隱藏下載按鈕（手機改用長按）
 downloadBtn.style.display = "none";
 
 // -------------------- 拼圖數量設定 --------------------
@@ -34,13 +33,13 @@ const pieceCounts = {
   1: 5,
   2: 7,
   3: 6,
-  4: 9
+  4: 9,
+  5: 35
 };
 
 let pieces = [];
 let selectedChoice = null;
 
-// -------------------- 背景 --------------------
 const backgrounds = [
   "img/background1.jpg",
   "img/background2.jpg",
@@ -52,6 +51,14 @@ let currentIndex = 0;
 let placedPositions = [];
 let gameFinished = false;
 let cursorPos = { x: 0, y: 0 };
+
+// -------------------- 第五關要浮到最上層的拼圖清單 --------------------
+const topLayerPieces = [
+  "img/piece1-3.png", "img/piece1-4.png", "img/piece1-5.png",
+  "img/piece2-3.png", "img/piece2-4.png", "img/piece2-5.png",
+  "img/piece3-2.png", "img/piece3-3.png", "img/piece3-4.png",
+  "img/piece4-5.png", "img/piece4-6.png", "img/piece4-7.png"
+];
 
 // -------------------- 初始畫面選擇 --------------------
 document.querySelectorAll('.image-selection img').forEach(img => {
@@ -66,32 +73,67 @@ document.querySelectorAll('.image-selection img').forEach(img => {
 startBtn.addEventListener('click', () => {
   if (!selectedChoice) return;
 
-  const count = pieceCounts[selectedChoice];
   pieces = [];
-  for (let i = 1; i <= count; i++) {
-    pieces.push(`img/piece${selectedChoice}-${i}.png`);
+  if (selectedChoice === "5") {
+    for (let c = 1; c <= 4; c++) {
+      const count = pieceCounts[c];
+      for (let i = 1; i <= count; i++) {
+        pieces.push(`img/piece${c}-${i}.png`);
+      }
+    }
+  } else {
+    const count = pieceCounts[selectedChoice];
+    for (let i = 1; i <= count; i++) {
+      pieces.push(`img/piece${selectedChoice}-${i}.png`);
+    }
   }
 
   startScreen.style.display = 'none';
   gameScreen.style.display = 'block';
-  saveHint.style.display = "none"; // 每次進遊戲先隱藏提示
+  saveHint.style.display = "none";
+
+  if (selectedChoice === "5") {
+    pieceCounterEl.style.display = "block";
+    remainingCountEl.textContent = pieces.length;
+  } else {
+    pieceCounterEl.style.display = "none";
+  }
+
   initGame();
 });
 
 // -------------------- 初始化遊戲 --------------------
 function initGame() {
-  const randomIndex = Math.floor(Math.random() * backgrounds.length);
-  bg = new Image();
-  bg.src = backgrounds[randomIndex];
+  if (selectedChoice === "5") {
+    bg = new Image();
+    bg.src = "img/background5.jpg"; // 🚩 第五關固定背景
+  } else {
+    const randomIndex = Math.floor(Math.random() * backgrounds.length);
+    bg = new Image();
+    bg.src = backgrounds[randomIndex];
+  }
 
   bg.onload = () => {
-    resizeCanvas(); // 🎯 先確保 canvas 尺寸正確
+    resizeCanvas();
     drawAllPlaced();
 
-    // 🚩 延遲一個動畫影格，確保 canvas 尺寸更新後再放正中央
     requestAnimationFrame(() => {
       cursorImgEl.src = pieces[currentIndex];
       cursorImgEl.style.display = "block";
+
+      // 🔹 手機 + 第五關 → 游標縮小一半
+      if (selectedChoice === "5" && isMobile) {
+        const tempImg = new Image();
+        tempImg.src = pieces[currentIndex];
+        tempImg.onload = () => {
+          cursorImgEl.style.width = tempImg.width / 2 + "px";
+          cursorImgEl.style.height = tempImg.height / 2 + "px";
+        };
+      } else {
+        cursorImgEl.style.width = "auto";
+        cursorImgEl.style.height = "auto";
+      }
+
       const rect = canvas.getBoundingClientRect();
       cursorPos.x = rect.left + rect.width / 2;
       cursorPos.y = rect.top + rect.height / 2;
@@ -111,7 +153,6 @@ function initGame() {
     restartBtn.style.display = "inline-block";
     backBtn.style.display = "inline-block";
 
-    // 確保 canvas 可見
     canvas.style.display = "block";
     if (resultImg) {
       resultImg.remove();
@@ -174,10 +215,18 @@ function handlePlace(clientX, clientY) {
     const img = new Image();
     img.src = pieces[currentIndex];
     img.onload = () => {
-      const halfW = img.width / 2;
-      const halfH = img.height / 2;
+      let w = img.width;
+      let h = img.height;
 
-      // ✅ 只有電腦版才做邊界校正
+      // 🔹 手機 + 第五關 → 縮小一半
+      if (selectedChoice === "5" && isMobile) {
+        w = w / 2;
+        h = h / 2;
+      }
+
+      const halfW = w / 2;
+      const halfH = h / 2;
+
       if (!isMobile) {
         if (x < halfW) x = halfW;
         if (x > canvas.width - halfW) x = canvas.width - halfW;
@@ -190,15 +239,32 @@ function handlePlace(clientX, clientY) {
         src: pieces[currentIndex],
         x: x - halfW,
         y: y - halfH,
-        w: img.width,
-        h: img.height
+        w: w,
+        h: h
       });
 
       currentIndex++;
+
+      if (selectedChoice === "5") {
+        remainingCountEl.textContent = pieces.length - currentIndex;
+      }
+
       if (currentIndex < pieces.length) {
-        // 🚩 下一個拼圖出現時也先放正中央
         cursorImgEl.src = pieces[currentIndex];
         cursorImgEl.style.display = "block";
+
+        if (selectedChoice === "5" && isMobile) {
+          const tempImg2 = new Image();
+          tempImg2.src = pieces[currentIndex];
+          tempImg2.onload = () => {
+            cursorImgEl.style.width = tempImg2.width / 2 + "px";
+            cursorImgEl.style.height = tempImg2.height / 2 + "px";
+          };
+        } else {
+          cursorImgEl.style.width = "auto";
+          cursorImgEl.style.height = "auto";
+        }
+
         const rect2 = canvas.getBoundingClientRect();
         cursorPos.x = rect2.left + rect2.width / 2;
         cursorPos.y = rect2.top + rect2.height / 2;
@@ -208,15 +274,28 @@ function handlePlace(clientX, clientY) {
         gameFinished = true;
         cursorImgEl.style.display = "none";
         confirmBtn.style.display = "none";
+        pieceCounterEl.style.display = "none";
 
-        // ✅ 完成 → 重繪背景 + 已放置的拼圖
+        // ✅ 完成 → 分層繪製
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+
+        // 先畫普通拼圖
         placedPositions.forEach(p => {
-          ctx.drawImage(p.img, p.x, p.y, p.w, p.h); // 🎯 自動裁切超出部分
+          if (!(selectedChoice === "5" && topLayerPieces.includes(p.src))) {
+            ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
+          }
         });
 
-        // 🎯 轉成 Blob URL
+        // 再畫最上層拼圖
+        if (selectedChoice === "5") {
+          placedPositions.forEach(p => {
+            if (topLayerPieces.includes(p.src)) {
+              ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
+            }
+          });
+        }
+
         canvas.toBlob((blob) => {
           const url = URL.createObjectURL(blob);
           resultImg = document.createElement("img");
@@ -230,7 +309,6 @@ function handlePlace(clientX, clientY) {
           canvas.style.display = "none";
           canvas.parentNode.insertBefore(resultImg, canvas.nextSibling);
 
-          // 📌 提示方式改為：手機顯示文字，電腦用 alert
           setTimeout(() => {
             if (isMobile) {
               saveHint.style.display = "block";
@@ -262,7 +340,6 @@ restartBtn.addEventListener("click", () => {
   cursorImgEl.src = pieces[currentIndex];
   cursorImgEl.style.display = "block";
 
-  // 🚩 第一個拼圖重置到正中央
   const rect = canvas.getBoundingClientRect();
   cursorPos.x = rect.left + rect.width / 2;
   cursorPos.y = rect.top + rect.height / 2;
@@ -275,7 +352,12 @@ restartBtn.addEventListener("click", () => {
     confirmBtn.style.display = "none";
   }
 
-  saveHint.style.display = "none"; // 重置時隱藏提示
+  if (selectedChoice === "5") {
+    pieceCounterEl.style.display = "block";
+    remainingCountEl.textContent = pieces.length;
+  }
+
+  saveHint.style.display = "none";
   initGame();
 });
 
@@ -297,7 +379,8 @@ backBtn.addEventListener("click", () => {
   restartBtn.style.display = "none";
   backBtn.style.display = "none";
   cursorImgEl.style.display = "none";
-  saveHint.style.display = "none"; // 返回選圖時隱藏提示
+  saveHint.style.display = "none";
+  pieceCounterEl.style.display = "none";
 
   if (resultImg) {
     resultImg.remove();

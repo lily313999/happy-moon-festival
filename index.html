@@ -16,12 +16,18 @@
       <img src="img/choice2.png" data-choice="2" alt="choice2">
       <img src="img/choice3.png" data-choice="3" alt="choice3">
       <img src="img/choice4.png" data-choice="4" alt="choice4">
+      <img src="img/choice5.png" data-choice="5" alt="choice5"> <!-- 新增第五選項 -->
     </div>
     <br><button id="start-btn" disabled>確定</button>
   </div>
 
   <!-- 遊戲畫面 -->
   <div id="game-screen" style="display:none;">
+    <!-- 📌 擺放剩餘計數 -->
+    <div id="piece-counter" style="font-size:18px; font-weight:bold; margin:5px; color:#333; display:none;">
+      擺放剩餘：<span id="remaining-count">0</span>/35
+    </div>
+
     <!-- 📌 手機版完成拼圖提示 -->
     <div id="save-hint" style="display:none; color:#ff6600; font-size:18px; font-weight:bold; margin:10px 0;">
       📌 長按可以儲存圖片
