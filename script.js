@@ -126,8 +126,8 @@ function initGame() {
         const tempImg = new Image();
         tempImg.src = pieces[currentIndex];
         tempImg.onload = () => {
-          cursorImgEl.style.width = tempImg.width / 2 + "px";
-          cursorImgEl.style.height = tempImg.height / 2 + "px";
+          cursorImgEl.style.width = tempImg.width * 2 / 3 + "px";
+          cursorImgEl.style.height = tempImg.height * 2 / 3  + "px";
         };
       } else {
         cursorImgEl.style.width = "auto";
@@ -220,8 +220,8 @@ function handlePlace(clientX, clientY) {
 
       // 🔹 手機 + 第五關 → 縮小一半
       if (selectedChoice === "5" && isMobile) {
-        w = w / 2;
-        h = h / 2;
+        w = w * 2 / 3 ;
+        h = h  * 2 / 3 ;
       }
 
       const halfW = w / 2;
@@ -257,8 +257,8 @@ function handlePlace(clientX, clientY) {
           const tempImg2 = new Image();
           tempImg2.src = pieces[currentIndex];
           tempImg2.onload = () => {
-            cursorImgEl.style.width = tempImg2.width / 2 + "px";
-            cursorImgEl.style.height = tempImg2.height / 2 + "px";
+            cursorImgEl.style.width = tempImg2.width * 2 / 3  + "px";
+            cursorImgEl.style.height = tempImg2.height * 2 / 3  + "px";
           };
         } else {
           cursorImgEl.style.width = "auto";
