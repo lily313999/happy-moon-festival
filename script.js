@@ -52,6 +52,10 @@ let placedPositions = [];
 let gameFinished = false;
 let cursorPos = { x: 0, y: 0 };
 
+// -------------------- 隱藏第六關點擊計數 --------------------
+let hiddenClickCount = 0;
+const choice6El = document.getElementById("choice6");
+
 // -------------------- 第五關要浮到最上層的拼圖清單 --------------------
 const topLayerPieces = [
   "img/piece1-3.png", "img/piece1-4.png", "img/piece1-5.png",
@@ -63,9 +67,22 @@ const topLayerPieces = [
 // -------------------- 初始畫面選擇 --------------------
 document.querySelectorAll('.image-selection img').forEach(img => {
   img.addEventListener('click', () => {
+    const choice = img.dataset.choice;
+
+    if (choice === "1") {
+      hiddenClickCount++;
+      if (hiddenClickCount >= 10) {
+        // 🚩 顯示第六關選項
+        choice6El.style.display = "inline-block";
+      }
+    } else {
+      hiddenClickCount = 0; // 點到其他選項就歸零
+    }
+
+    selectedChoice = choice;
+
     document.querySelectorAll('.image-selection img').forEach(i => i.classList.remove('active'));
     img.classList.add('active');
-    selectedChoice = img.dataset.choice;
     startBtn.disabled = false;
   });
 });
@@ -74,12 +91,19 @@ startBtn.addEventListener('click', () => {
   if (!selectedChoice) return;
 
   pieces = [];
+
   if (selectedChoice === "5") {
+    // 🚩 第五關：包含前四關全部拼圖
     for (let c = 1; c <= 4; c++) {
       const count = pieceCounts[c];
       for (let i = 1; i <= count; i++) {
         pieces.push(`img/piece${c}-${i}.png`);
       }
+    }
+  } else if (selectedChoice === "6") {
+    // 🚩 第六關：固定背景4 + 五片拼圖
+    for (let i = 1; i <= 5; i++) {
+      pieces.push(`img/piece6-${i}.png`);
     }
   } else {
     const count = pieceCounts[selectedChoice];
@@ -106,7 +130,10 @@ startBtn.addEventListener('click', () => {
 function initGame() {
   if (selectedChoice === "5") {
     bg = new Image();
-    bg.src = "img/background5.jpg"; // 🚩 第五關固定背景
+    bg.src = "img/background5.jpg"; // 第五關固定背景
+  } else if (selectedChoice === "6") {
+    bg = new Image();
+    bg.src = "img/background4.jpg"; // 第六關固定背景
   } else {
     const randomIndex = Math.floor(Math.random() * backgrounds.length);
     bg = new Image();
@@ -121,13 +148,12 @@ function initGame() {
       cursorImgEl.src = pieces[currentIndex];
       cursorImgEl.style.display = "block";
 
-      // 🔹 手機 + 第五關 → 游標縮小一半
-      if (selectedChoice === "5" && isMobile) {
+      if ((selectedChoice === "5" || selectedChoice === "6") && isMobile) {
         const tempImg = new Image();
         tempImg.src = pieces[currentIndex];
         tempImg.onload = () => {
           cursorImgEl.style.width = tempImg.width * 2 / 3 + "px";
-          cursorImgEl.style.height = tempImg.height * 2 / 3  + "px";
+          cursorImgEl.style.height = tempImg.height * 2 / 3 + "px";
         };
       } else {
         cursorImgEl.style.width = "auto";
@@ -218,10 +244,9 @@ function handlePlace(clientX, clientY) {
       let w = img.width;
       let h = img.height;
 
-      // 🔹 手機 + 第五關 → 縮小一半
-      if (selectedChoice === "5" && isMobile) {
-        w = w * 2 / 3 ;
-        h = h  * 2 / 3 ;
+      if ((selectedChoice === "5" || selectedChoice === "6") && isMobile) {
+        w = w * 2 / 3;
+        h = h * 2 / 3;
       }
 
       const halfW = w / 2;
@@ -253,12 +278,12 @@ function handlePlace(clientX, clientY) {
         cursorImgEl.src = pieces[currentIndex];
         cursorImgEl.style.display = "block";
 
-        if (selectedChoice === "5" && isMobile) {
+        if ((selectedChoice === "5" || selectedChoice === "6") && isMobile) {
           const tempImg2 = new Image();
           tempImg2.src = pieces[currentIndex];
           tempImg2.onload = () => {
-            cursorImgEl.style.width = tempImg2.width * 2 / 3  + "px";
-            cursorImgEl.style.height = tempImg2.height * 2 / 3  + "px";
+            cursorImgEl.style.width = tempImg2.width * 2 / 3 + "px";
+            cursorImgEl.style.height = tempImg2.height * 2 / 3 + "px";
           };
         } else {
           cursorImgEl.style.width = "auto";
@@ -276,18 +301,15 @@ function handlePlace(clientX, clientY) {
         confirmBtn.style.display = "none";
         pieceCounterEl.style.display = "none";
 
-        // ✅ 完成 → 分層繪製
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
-        // 先畫普通拼圖
         placedPositions.forEach(p => {
           if (!(selectedChoice === "5" && topLayerPieces.includes(p.src))) {
             ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
           }
         });
 
-        // 再畫最上層拼圖
         if (selectedChoice === "5") {
           placedPositions.forEach(p => {
             if (topLayerPieces.includes(p.src)) {
