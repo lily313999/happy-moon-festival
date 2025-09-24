@@ -253,12 +253,8 @@ function handlePlace(clientX, clientY) {
       const halfW = w / 2;
       const halfH = h / 2;
 
-      if (!isMobile) {
-        if (x < halfW) x = halfW;
-        if (x > canvas.width - halfW) x = canvas.width - halfW;
-        if (y < halfH) y = halfH;
-        if (y > canvas.height - halfH) y = canvas.height - halfH;
-      }
+      // ❌ 移除了電腦版自動校正，保留原始位置
+      // 超出 canvas 的部分會自動被裁掉
 
       placedPositions.push({
         img: img,
