@@ -148,7 +148,7 @@ function initGame() {
       cursorImgEl.src = pieces[currentIndex];
       cursorImgEl.style.display = "block";
 
-      if ((selectedChoice === "5" || selectedChoice === "6") && isMobile) {
+      if (selectedChoice === "5" && isMobile) {
         const tempImg = new Image();
         tempImg.src = pieces[currentIndex];
         tempImg.onload = () => {
@@ -244,7 +244,8 @@ function handlePlace(clientX, clientY) {
       let w = img.width;
       let h = img.height;
 
-      if ((selectedChoice === "5" || selectedChoice === "6") && isMobile) {
+      // 🚩 只有第 5 關在手機上縮小
+      if (selectedChoice === "5" && isMobile) {
         w = w * 2 / 3;
         h = h * 2 / 3;
       }
@@ -278,7 +279,7 @@ function handlePlace(clientX, clientY) {
         cursorImgEl.src = pieces[currentIndex];
         cursorImgEl.style.display = "block";
 
-        if ((selectedChoice === "5" || selectedChoice === "6") && isMobile) {
+        if (selectedChoice === "5" && isMobile) {
           const tempImg2 = new Image();
           tempImg2.src = pieces[currentIndex];
           tempImg2.onload = () => {
