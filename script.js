@@ -405,4 +405,8 @@ backBtn.addEventListener("click", () => {
     resultImg.remove();
     resultImg = null;
   }
+
+  // 🚩 回到選圖時隱藏第六關，計數重置
+  choice6El.style.display = "none";
+  hiddenClickCount = 0;
 });
