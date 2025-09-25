@@ -285,6 +285,25 @@ function handlePlace(clientX, clientY) {
 
       if (currentIndex < pieces.length) {
         cursorImgEl.src = pieces[currentIndex];
+        cursorImgEl.style.display = "block";
+
+        if (selectedChoice === "5" && isMobile) {
+          const tempImg2 = new Image();
+          tempImg2.src = pieces[currentIndex];
+          tempImg2.onload = () => {
+            cursorImgEl.style.width = tempImg2.width * 2 / 3 + "px";
+            cursorImgEl.style.height = tempImg2.height * 2 / 3 + "px";
+          };
+        } else {
+          cursorImgEl.style.width = "auto";
+          cursorImgEl.style.height = "auto";
+        }
+
+        const rect2 = canvas.getBoundingClientRect();
+        cursorPos.x = rect2.left + rect2.width / 2;
+        cursorPos.y = rect2.top + rect2.height / 2;
+        cursorImgEl.style.left = cursorPos.x + "px";
+        cursorImgEl.style.top = cursorPos.y + "px";
       } else {
         // -------------------- 完成拼圖 --------------------
         gameFinished = true;
@@ -324,8 +343,8 @@ function handlePlace(clientX, clientY) {
           const randImg = new Image();
           randImg.src = `img/piece7-${rand710}.png`;
           randImg.onload = () => {
-            const maxX = canvas.width - randImg.width;
-            const maxY = canvas.height - randImg.height;
+            const maxX = Math.max(0, canvas.width - randImg.width);
+            const maxY = Math.max(0, canvas.height - randImg.height);
             const rx = Math.random() * maxX;
             const ry = Math.random() * maxY;
             ctx.drawImage(randImg, rx, ry, randImg.width, randImg.height);
@@ -344,10 +363,10 @@ function handlePlace(clientX, clientY) {
               }
             });
 
-            // 4) 覆蓋率檢查
+            // 4) 覆蓋率檢查（**改為 1/2 做測試**）
             let totalArea = placedPositions.reduce((a, p) => a + p.w * p.h, 0);
             const bgArea = canvas.width * canvas.height;
-            if (totalArea < bgArea / 4) {
+            if (totalArea < bgArea / 3) { // <- 閾值改成 1/2（測試用）
               const p7 = new Image();
               p7.src = "img/piece7-1.png";
               p7.onload = () => {
@@ -356,9 +375,24 @@ function handlePlace(clientX, clientY) {
                 ctx.drawImage(p7, cx, cy, p7.width, p7.height);
                 finalizeExport();
               };
+              p7.onerror = () => finalizeExport();
             } else {
               finalizeExport();
             }
+          };
+          randImg.onerror = () => {
+            // 若隨機底圖載入失敗，仍畫已放置拼片並輸出
+            placedPositions.forEach(p => {
+              if (!p.src.includes("piece7-1.png")) {
+                ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
+              }
+            });
+            placedPositions.forEach(p => {
+              if (p.src.includes("piece7-1.png")) {
+                ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
+              }
+            });
+            finalizeExport();
           };
         } else {
           // 其他關卡
