@@ -366,7 +366,7 @@ function handlePlace(clientX, clientY) {
             // 4) 覆蓋率檢查（**改為 1/2 做測試**）
             let totalArea = placedPositions.reduce((a, p) => a + p.w * p.h, 0);
             const bgArea = canvas.width * canvas.height;
-            if (totalArea < bgArea / 3) { // <- 閾值改成 1/2（測試用）
+            if (totalArea < bgArea / 2) { // <- 閾值改成 1/2（測試用）
               const p7 = new Image();
               p7.src = "img/piece7-1.png";
               p7.onload = () => {
