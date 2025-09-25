@@ -83,7 +83,6 @@ function generatePieces(choice) {
       result.push(`img/piece6-${i}.png`);
     }
   } else if (choice === 7) {
-    // 🔑 第七關隨機組合
     result.push("img/piece7-1.png"); // 必出
     const rand23 = Math.random() < 0.5 ? 2 : 3;
     result.push(`img/piece7-${rand23}.png`);
@@ -363,10 +362,10 @@ function handlePlace(clientX, clientY) {
               }
             });
 
-            // 4) 覆蓋率檢查（**改為 1/2 做測試**）
-            let totalArea = placedPositions.reduce((a, p) => a + p.w * p.h, 0);
+            // 4) 覆蓋率檢查（交集面積計算）
+            let totalArea = placedPositions.reduce((a, p) => a + getIntersectionArea(p, canvas), 0);
             const bgArea = canvas.width * canvas.height;
-            if (totalArea < bgArea / 2) { // <- 閾值改成 1/2（測試用）
+            if (totalArea < bgArea / 2) { // 門檻：1/2
               const p7 = new Image();
               p7.src = "img/piece7-1.png";
               p7.onload = () => {
@@ -413,6 +412,18 @@ function handlePlace(clientX, clientY) {
       }
     };
   }
+}
+
+// -------------------- 覆蓋率交集計算 --------------------
+function getIntersectionArea(p, canvas) {
+  let left = Math.max(0, p.x);
+  let top = Math.max(0, p.y);
+  let right = Math.min(canvas.width, p.x + p.w);
+  let bottom = Math.min(canvas.height, p.y + p.h);
+  if (right > left && bottom > top) {
+    return (right - left) * (bottom - top);
+  }
+  return 0;
 }
 
 // -------------------- 繪製 --------------------
