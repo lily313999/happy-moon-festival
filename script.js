@@ -2,7 +2,7 @@
 const startBtn = document.getElementById('start-btn');
 const startScreen = document.getElementById('start-screen');
 const gameScreen = document.getElementById('game-screen');
-const saveHint = document.getElementById('save-hint'); 
+const saveHint = document.getElementById('save-hint');
 const pieceCounterEl = document.getElementById("piece-counter");
 const remainingCountEl = document.getElementById("remaining-count");
 
@@ -52,11 +52,15 @@ let placedPositions = [];
 let gameFinished = false;
 let cursorPos = { x: 0, y: 0 };
 
-// -------------------- 隱藏第六關點擊計數 --------------------
-let hiddenClickCount = 0;
+// -------------------- 隱藏關計數 --------------------
+let hiddenClickCount = 0;     // 第六關計數
 const choice6El = document.getElementById("choice6");
 
-// -------------------- 第五關要浮到最上層的拼圖清單 --------------------
+let unlockSequence = [5,5,5,5,5,4,4,4,4,3,3,3,2,2,1]; // 第七關解鎖序列
+let currentUnlockIndex = 0;
+const choice7El = document.getElementById("choice7");
+
+// -------------------- 第五關浮到最上層的拼圖 --------------------
 const topLayerPieces = [
   "img/piece1-3.png", "img/piece1-4.png", "img/piece1-5.png",
   "img/piece2-3.png", "img/piece2-4.png", "img/piece2-5.png",
@@ -64,23 +68,62 @@ const topLayerPieces = [
   "img/piece4-5.png", "img/piece4-6.png", "img/piece4-7.png"
 ];
 
+// -------------------- 產生拼片組合 --------------------
+function generatePieces(choice) {
+  let result = [];
+  if (choice === 5) {
+    for (let c = 1; c <= 4; c++) {
+      const count = pieceCounts[c];
+      for (let i = 1; i <= count; i++) {
+        result.push(`img/piece${c}-${i}.png`);
+      }
+    }
+  } else if (choice === 6) {
+    for (let i = 1; i <= 5; i++) {
+      result.push(`img/piece6-${i}.png`);
+    }
+  } else if (choice === 7) {
+    // 🔑 第七關隨機組合
+    result.push("img/piece7-1.png"); // 必出
+    const rand23 = Math.random() < 0.5 ? 2 : 3;
+    result.push(`img/piece7-${rand23}.png`);
+    const rand456 = 4 + Math.floor(Math.random() * 3);
+    result.push(`img/piece7-${rand456}.png`);
+  } else {
+    const count = pieceCounts[choice];
+    for (let i = 1; i <= count; i++) {
+      result.push(`img/piece${choice}-${i}.png`);
+    }
+  }
+  return result;
+}
+
 // -------------------- 初始畫面選擇 --------------------
 document.querySelectorAll('.image-selection img').forEach(img => {
   img.addEventListener('click', () => {
-    const choice = img.dataset.choice;
+    const choice = parseInt(img.dataset.choice);
 
-    if (choice === "1") {
+    // 第六關解鎖
+    if (choice === 1) {
       hiddenClickCount++;
       if (hiddenClickCount >= 10) {
-        // 🚩 顯示第六關選項
         choice6El.style.display = "inline-block";
       }
     } else {
-      hiddenClickCount = 0; // 點到其他選項就歸零
+      hiddenClickCount = 0;
     }
 
-    selectedChoice = choice;
+    // 第七關解鎖
+    if (choice === unlockSequence[currentUnlockIndex]) {
+      currentUnlockIndex++;
+      if (currentUnlockIndex >= unlockSequence.length) {
+        choice7El.style.display = "inline-block";
+      }
+    } else {
+      currentUnlockIndex = 0;
+    }
 
+    selectedChoice = choice.toString();
     document.querySelectorAll('.image-selection img').forEach(i => i.classList.remove('active'));
     img.classList.add('active');
     startBtn.disabled = false;
@@ -89,28 +132,7 @@ document.querySelectorAll('.image-selection img').forEach(img => {
 
 startBtn.addEventListener('click', () => {
   if (!selectedChoice) return;
-
-  pieces = [];
-
-  if (selectedChoice === "5") {
-    // 🚩 第五關：包含前四關全部拼圖
-    for (let c = 1; c <= 4; c++) {
-      const count = pieceCounts[c];
-      for (let i = 1; i <= count; i++) {
-        pieces.push(`img/piece${c}-${i}.png`);
-      }
-    }
-  } else if (selectedChoice === "6") {
-    // 🚩 第六關：固定背景4 + 五片拼圖
-    for (let i = 1; i <= 5; i++) {
-      pieces.push(`img/piece6-${i}.png`);
-    }
-  } else {
-    const count = pieceCounts[selectedChoice];
-    for (let i = 1; i <= count; i++) {
-      pieces.push(`img/piece${selectedChoice}-${i}.png`);
-    }
-  }
+  pieces = generatePieces(parseInt(selectedChoice));
 
   startScreen.style.display = 'none';
   gameScreen.style.display = 'block';
@@ -130,10 +152,13 @@ startBtn.addEventListener('click', () => {
 function initGame() {
   if (selectedChoice === "5") {
     bg = new Image();
-    bg.src = "img/background5.jpg"; // 第五關固定背景
+    bg.src = "img/background5.jpg";
   } else if (selectedChoice === "6") {
     bg = new Image();
-    bg.src = "img/background4.jpg"; // 第六關固定背景
+    bg.src = "img/background4.jpg";
+  } else if (selectedChoice === "7") {
+    bg = new Image();
+    bg.src = "img/background7.jpg";
   } else {
     const randomIndex = Math.floor(Math.random() * backgrounds.length);
     bg = new Image();
@@ -145,10 +170,10 @@ function initGame() {
     drawAllPlaced();
 
     requestAnimationFrame(() => {
-      cursorImgEl.src = pieces[currentIndex];
+      if (pieces.length > 0) cursorImgEl.src = pieces[currentIndex];
       cursorImgEl.style.display = "block";
 
-      if (selectedChoice === "5" && isMobile) {
+      if (selectedChoice === "5" && isMobile && pieces.length > 0) {
         const tempImg = new Image();
         tempImg.src = pieces[currentIndex];
         tempImg.onload = () => {
@@ -159,12 +184,6 @@ function initGame() {
         cursorImgEl.style.width = "auto";
         cursorImgEl.style.height = "auto";
       }
-
-      const rect = canvas.getBoundingClientRect();
-      cursorPos.x = rect.left + rect.width / 2;
-      cursorPos.y = rect.top + rect.height / 2;
-      cursorImgEl.style.left = cursorPos.x + "px";
-      cursorImgEl.style.top = cursorPos.y + "px";
     });
 
     if (isMobile) {
@@ -244,23 +263,16 @@ function handlePlace(clientX, clientY) {
       let w = img.width;
       let h = img.height;
 
-      // 🚩 只有第 5 關在手機上縮小
       if (selectedChoice === "5" && isMobile) {
         w = w * 2 / 3;
         h = h * 2 / 3;
       }
 
-      const halfW = w / 2;
-      const halfH = h / 2;
-
-      // ❌ 移除了電腦版自動校正，保留原始位置
-      // 超出 canvas 的部分會自動被裁掉
-
       placedPositions.push({
         img: img,
         src: pieces[currentIndex],
-        x: x - halfW,
-        y: y - halfH,
+        x: x - w / 2,
+        y: y - h / 2,
         w: w,
         h: h
       });
@@ -273,26 +285,8 @@ function handlePlace(clientX, clientY) {
 
       if (currentIndex < pieces.length) {
         cursorImgEl.src = pieces[currentIndex];
-        cursorImgEl.style.display = "block";
-
-        if (selectedChoice === "5" && isMobile) {
-          const tempImg2 = new Image();
-          tempImg2.src = pieces[currentIndex];
-          tempImg2.onload = () => {
-            cursorImgEl.style.width = tempImg2.width * 2 / 3 + "px";
-            cursorImgEl.style.height = tempImg2.height * 2 / 3 + "px";
-          };
-        } else {
-          cursorImgEl.style.width = "auto";
-          cursorImgEl.style.height = "auto";
-        }
-
-        const rect2 = canvas.getBoundingClientRect();
-        cursorPos.x = rect2.left + rect2.width / 2;
-        cursorPos.y = rect2.top + rect2.height / 2;
-        cursorImgEl.style.left = cursorPos.x + "px";
-        cursorImgEl.style.top = cursorPos.y + "px";
       } else {
+        // -------------------- 完成拼圖 --------------------
         gameFinished = true;
         cursorImgEl.style.display = "none";
         confirmBtn.style.display = "none";
@@ -301,41 +295,87 @@ function handlePlace(clientX, clientY) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
-        placedPositions.forEach(p => {
-          if (!(selectedChoice === "5" && topLayerPieces.includes(p.src))) {
-            ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
-          }
-        });
+        const finalizeExport = () => {
+          canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            resultImg = document.createElement("img");
+            resultImg.src = url;
+            resultImg.style.width = "100%";
+            resultImg.style.maxWidth = "600px";
+            resultImg.style.border = "1px solid #ccc";
+            resultImg.style.display = "block";
+            resultImg.style.margin = "10px auto";
+            canvas.style.display = "none";
+            canvas.parentNode.insertBefore(resultImg, canvas.nextSibling);
 
-        if (selectedChoice === "5") {
+            setTimeout(() => {
+              if (isMobile) {
+                saveHint.style.display = "block";
+              } else {
+                alert("📌 提示：右鍵圖片即可另存");
+              }
+            }, 200);
+          }, "image/png");
+        };
+
+        if (selectedChoice === "7") {
+          // 1) 隨機 piece7-7~10 最底層
+          const rand710 = 7 + Math.floor(Math.random() * 4);
+          const randImg = new Image();
+          randImg.src = `img/piece7-${rand710}.png`;
+          randImg.onload = () => {
+            const maxX = canvas.width - randImg.width;
+            const maxY = canvas.height - randImg.height;
+            const rx = Math.random() * maxX;
+            const ry = Math.random() * maxY;
+            ctx.drawImage(randImg, rx, ry, randImg.width, randImg.height);
+
+            // 2) 畫非 piece7-1 的拼片
+            placedPositions.forEach(p => {
+              if (!p.src.includes("piece7-1.png")) {
+                ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
+              }
+            });
+
+            // 3) piece7-1 在最上層
+            placedPositions.forEach(p => {
+              if (p.src.includes("piece7-1.png")) {
+                ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
+              }
+            });
+
+            // 4) 覆蓋率檢查
+            let totalArea = placedPositions.reduce((a, p) => a + p.w * p.h, 0);
+            const bgArea = canvas.width * canvas.height;
+            if (totalArea < bgArea / 4) {
+              const p7 = new Image();
+              p7.src = "img/piece7-1.png";
+              p7.onload = () => {
+                const cx = (canvas.width - p7.width) / 2;
+                const cy = (canvas.height - p7.height) / 2;
+                ctx.drawImage(p7, cx, cy, p7.width, p7.height);
+                finalizeExport();
+              };
+            } else {
+              finalizeExport();
+            }
+          };
+        } else {
+          // 其他關卡
           placedPositions.forEach(p => {
-            if (topLayerPieces.includes(p.src)) {
+            if (!(selectedChoice === "5" && topLayerPieces.includes(p.src))) {
               ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
             }
           });
+          if (selectedChoice === "5") {
+            placedPositions.forEach(p => {
+              if (topLayerPieces.includes(p.src)) {
+                ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
+              }
+            });
+          }
+          finalizeExport();
         }
-
-        canvas.toBlob((blob) => {
-          const url = URL.createObjectURL(blob);
-          resultImg = document.createElement("img");
-          resultImg.src = url;
-          resultImg.style.width = "100%";
-          resultImg.style.maxWidth = "600px";
-          resultImg.style.border = "1px solid #ccc";
-          resultImg.style.display = "block";
-          resultImg.style.margin = "10px auto";
-
-          canvas.style.display = "none";
-          canvas.parentNode.insertBefore(resultImg, canvas.nextSibling);
-
-          setTimeout(() => {
-            if (isMobile) {
-              saveHint.style.display = "block";
-            } else {
-              alert("📌 提示：右鍵圖片即可另存");
-            }
-          }, 200);
-        }, "image/png");
       }
     };
   }
@@ -345,7 +385,6 @@ function handlePlace(clientX, clientY) {
 function drawAllPlaced() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
-
   placedPositions.forEach(p => {
     ctx.drawImage(p.img, p.x, p.y, p.w, p.h);
   });
@@ -356,20 +395,12 @@ restartBtn.addEventListener("click", () => {
   placedPositions = [];
   currentIndex = 0;
   gameFinished = false;
-  cursorImgEl.src = pieces[currentIndex];
+  pieces = generatePieces(parseInt(selectedChoice));
+  if (pieces.length > 0) cursorImgEl.src = pieces[currentIndex];
   cursorImgEl.style.display = "block";
 
-  const rect = canvas.getBoundingClientRect();
-  cursorPos.x = rect.left + rect.width / 2;
-  cursorPos.y = rect.top + rect.height / 2;
-  cursorImgEl.style.left = cursorPos.x + "px";
-  cursorImgEl.style.top = cursorPos.y + "px";
-
-  if (isMobile) {
-    confirmBtn.style.display = "inline-block";
-  } else {
-    confirmBtn.style.display = "none";
-  }
+  if (isMobile) confirmBtn.style.display = "inline-block";
+  else confirmBtn.style.display = "none";
 
   if (selectedChoice === "5") {
     pieceCounterEl.style.display = "block";
@@ -380,7 +411,7 @@ restartBtn.addEventListener("click", () => {
   initGame();
 });
 
-// -------------------- 回到選圖畫面 --------------------
+// -------------------- 回到選圖 --------------------
 backBtn.addEventListener("click", () => {
   placedPositions = [];
   currentIndex = 0;
@@ -406,7 +437,8 @@ backBtn.addEventListener("click", () => {
     resultImg = null;
   }
 
-  // 🚩 回到選圖時隱藏第六關，計數重置
   choice6El.style.display = "none";
   hiddenClickCount = 0;
+  choice7El.style.display = "none";
+  currentUnlockIndex = 0;
 });
