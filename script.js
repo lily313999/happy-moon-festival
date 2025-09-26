@@ -329,9 +329,7 @@ function handlePlace(clientX, clientY) {
             setTimeout(() => {
               if (isMobile) {
                 saveHint.style.display = "block";
-              } else {
-                alert("📌 提示：右鍵圖片即可另存");
-              }
+              } 
             }, 200);
           }, "image/png");
         };
@@ -487,3 +485,4 @@ backBtn.addEventListener("click", () => {
   choice7El.style.display = "none";
   currentUnlockIndex = 0;
 });
+
