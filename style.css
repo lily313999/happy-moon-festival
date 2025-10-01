@@ -77,8 +77,7 @@ canvas {
 
 .banner {
   display: block;
-  margin: 0 auto 10px auto; /* 置中，底下留空隙 */
-  max-width: 300px;         /* 🔑 限制最大寬度 */
-  width: 100%;              /* 仍然支援縮小 */
+  margin: 0 auto 10px auto;
+  max-width: 80%;   /* 總是比螢幕小一點 */
   height: auto;
 }
