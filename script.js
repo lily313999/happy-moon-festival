@@ -68,6 +68,15 @@ const topLayerPieces = [
   "img/piece4-5.png", "img/piece4-6.png", "img/piece4-7.png"
 ];
 
+
+// -------------------- 預先載入圖片 --------------------
+function preloadImages(imageArray) {
+  imageArray.forEach(src => {
+    const img = new Image();
+    img.src = src;
+  });
+}
+
 // -------------------- 產生拼片組合 --------------------
 function generatePieces(choice) {
   let result = [];
@@ -132,6 +141,23 @@ document.querySelectorAll('.image-selection img').forEach(img => {
 startBtn.addEventListener('click', () => {
   if (!selectedChoice) return;
   pieces = generatePieces(parseInt(selectedChoice));
+
+  // 🚀 先預載拼片
+  preloadImages(pieces);
+
+  // 🚀 預載背景
+  let bgSrc = "";
+  if (selectedChoice === "5") {
+    bgSrc = "img/background5.jpg";
+  } else if (selectedChoice === "6") {
+    bgSrc = "img/background4.jpg";
+  } else if (selectedChoice === "7") {
+    bgSrc = "img/background7.jpg";
+  } else {
+    bgSrc = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+  }
+  const bgPreload = new Image();
+  bgPreload.src = bgSrc;
 
   startScreen.style.display = 'none';
   gameScreen.style.display = 'block';
@@ -329,7 +355,9 @@ function handlePlace(clientX, clientY) {
             setTimeout(() => {
               if (isMobile) {
                 saveHint.style.display = "block";
-              } 
+              } else {
+                alert("📌 提示：右鍵圖片即可另存");
+              }
             }, 200);
           }, "image/png");
         };
@@ -485,4 +513,3 @@ backBtn.addEventListener("click", () => {
   choice7El.style.display = "none";
   currentUnlockIndex = 0;
 });
-
