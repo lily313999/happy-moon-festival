@@ -37,9 +37,10 @@ body, html {
   box-shadow: 0 0 10px #ff9900;
 }
 
-#start-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+#start-btn {
+  font-size: 1em;     /* 字體變大 */
+  padding: 5px 10px;   /* 上下 / 左右 內距變大 */
+  border-radius: 5px;  /* 圓角更明顯 */
 }
 
 canvas {
