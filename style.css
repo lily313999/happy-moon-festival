@@ -74,3 +74,11 @@ canvas {
 #piece-counter {
   text-align: center;
 }
+
+.banner {
+  display: block;
+  margin: 0 auto 10px auto; /* 置中，底下留空隙 */
+  max-width: 300px;         /* 🔑 限制最大寬度 */
+  width: 100%;              /* 仍然支援縮小 */
+  height: auto;
+}
